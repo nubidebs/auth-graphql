@@ -1,50 +1,40 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import AuthForm from './AuthForm';
-import mutation from '../mutations/Login';
-import { graphql } from 'react-apollo';
-import query from '../queries/CurrentUser';
-import { hashHistory } from 'react-router';
+import { useMutation } from '@apollo/client';
+import { FETCH_USER, LOGIN } from '../queries/apolloQueries';
+import { withRouter } from 'react-router';
 
-class LoginForm extends Component {
-  constructor(props) {
-    super(props);
+const LoginForm = ({ history }) => {
+  const [loginMutation] = useMutation(LOGIN);
+  const [errors, setErrors] = useState([]);
 
-    this.state = { errors: [] };
-  }
+  const onLogin = ({ email, password }) => {
+    loginMutation({
+      variables: {
+        email,
+        password,
+      },
+      refetchQueries: [{ query: FETCH_USER }],
+      //this is needed so that we don't go to the dashboard before the user was fetched
+      //otherwise we'd get redirected to login from the requireAuth HOC
+      awaitRefetchQueries: true,
+    })
+      .then(() => history.push('/dashboard'))
+      .catch((res) => {
+        const errs = res.graphQLErrors.map((err) => {
+          const msg = err.message;
+          return msg.replaceAll('"', '').replace('Unexpected error value:', '');
+        });
+        setErrors(errs);
+      });
+  };
 
-  componentWillUpdate(nextProps) {
-    // this.props // the old, current set of props
-    // nextProps // the next set of props that will be in place
-    // when the component rerenders
-    if (!this.props.data.user && nextProps.data.user) {
-      // redirect to dashboard!!!!
-      hashHistory.push('/dashboard');
-    }
-  }
+  return (
+    <div>
+      <h3>Login</h3>
+      <AuthForm errors={errors} onSubmit={onLogin} />
+    </div>
+  );
+};
 
-  onSubmit({ email, password }) {
-    this.props.mutate({
-      variables: { email, password },
-      refetchQueries: [{ query }]
-    }).catch(res => {
-      const errors = res.graphQLErrors.map(error => error.message);
-      this.setState({ errors });
-    });
-  }
-
-  render() {
-    return (
-      <div>
-        <h3>Login</h3>
-        <AuthForm
-          errors={this.state.errors}
-          onSubmit={this.onSubmit.bind(this)}
-        />
-      </div>
-    );
-  }
-}
-
-export default graphql(query)(
-  graphql(mutation)(LoginForm)
-);
+export default withRouter(LoginForm);

@@ -1,46 +1,37 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import AuthForm from './AuthForm';
-import { graphql } from 'react-apollo';
-import mutation from '../mutations/Signup';
-import query from '../queries/CurrentUser';
-import { hashHistory } from 'react-router';
+import { useMutation } from '@apollo/client';
+import { FETCH_USER, SIGNUP } from '../queries/apolloQueries';
+import { withRouter } from 'react-router';
 
-class SignupForm extends Component {
-  constructor(props) {
-    super(props);
+const SignupForm = ({ history }) => {
+  const [signupMutation] = useMutation(SIGNUP);
+  const [errors, setErrors] = useState([]);
 
-    this.state = { errors: [] };
-  }
+  const onSignup = ({ email, password }) => {
+    signupMutation({
+      variables: {
+        email,
+        password,
+      },
+      refetchQueries: [{ query: FETCH_USER }],
+    })
+      .then(() => history.push('/dashboard'))
+      .catch((res) => {
+        const errs = res.graphQLErrors.map((err) => {
+          const msg = err.message;
+          return msg.replaceAll('"', '').replace('Unexpected error value:', '');
+        });
+        setErrors(errs);
+      });
+  };
 
-  componentWillUpdate(nextProps) {
-    if (nextProps.data.user && !this.props.data.user) {
-      hashHistory.push('/dashboard');
-    }
-  }
+  return (
+    <div>
+      <h3>Signup</h3>
+      <AuthForm errors={errors} onSubmit={onSignup} />
+    </div>
+  );
+};
 
-  onSubmit({ email, password }) {
-    this.props.mutate({
-      variables: { email, password },
-      refetchQueries: [{ query }]
-    }).catch(res => {
-      const errors = res.graphQLErrors.map(error => error.message);
-      this.setState({ errors });
-    });
-  }
-
-  render() {
-    return (
-      <div>
-        <h3>Sign Up</h3>
-        <AuthForm
-          errors={this.state.errors}
-          onSubmit={this.onSubmit.bind(this)}
-        />
-      </div>
-    );
-  }
-}
-
-export default graphql(query)(
-  graphql(mutation)(SignupForm)
-);
+export default withRouter(SignupForm);

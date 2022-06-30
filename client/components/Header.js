@@ -1,55 +1,55 @@
-import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
-import { Link } from 'react-router';
-import query from '../queries/CurrentUser';
-import mutation from '../mutations/Logout';
+import React from 'react';
 
-class Header extends Component {
-  onLogoutClick() {
-    this.props.mutate({
-      refetchQueries: [{ query }]
+import { FETCH_USER, LOGOUT } from '../queries/apolloQueries';
+import { Link } from 'react-router-dom';
+import { useQuery, useMutation } from '@apollo/client';
+
+const Header = () => {
+  const { data, loading, error } = useQuery(FETCH_USER);
+  const [logoutMutation] = useMutation(LOGOUT);
+
+  const onLogoutClick = () => {
+    logoutMutation({
+      refetchQueries: [{ query: FETCH_USER }],
     });
-  }
+  };
 
-  renderButtons() {
-    const { loading, user } = this.props.data;
-
-    if (loading) { return <div />; }
+  const renderButtons = () => {
+    if (loading) {
+      return <div />;
+    }
+    const { user } = data;
+    if (error) return <p>ERROR: {error.message}</p>;
 
     if (user) {
       return (
-        <li><a onClick={this.onLogoutClick.bind(this)}>Logout</a></li>
+        <li>
+          <a onClick={onLogoutClick}>Logout</a>
+        </li>
       );
     } else {
       return (
         <div>
           <li>
-            <Link to="/signup">Signup</Link>
+            <Link to='/signup'>Signup</Link>
           </li>
           <li>
-            <Link to="/login">Login</Link>
+            <Link to='/login'>Login</Link>
           </li>
         </div>
       );
     }
-  }
+  };
 
-  render() {
-    return (
-      <nav>
-        <div className="nav-wrapper">
-          <Link to="/" className="brand-logo left">
-            Home
-          </Link>
-          <ul className="right">
-            {this.renderButtons()}
-          </ul>
-        </div>
-      </nav>
-    );
-  }
-}
-
-export default graphql(mutation)(
-  graphql(query)(Header)
-);
+  return (
+    <nav>
+      <div className='nav-wrapper'>
+        <Link to='/' className='brand-logo left'>
+          Home
+        </Link>
+        <ul className='right'>{renderButtons()}</ul>
+      </div>
+    </nav>
+  );
+};
+export default Header;

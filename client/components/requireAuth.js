@@ -1,20 +1,21 @@
-import React, { Component } from 'react';
-import { graphql } from 'react-apollo';
-import currentUserQuery from '../queries/CurrentUser';
-import { hashHistory } from 'react-router';
+import React, { useEffect } from 'react';
+import { compose } from 'redux';
+import { FETCH_USER } from '../queries/apolloQueries';
+import { withRouter } from 'react-router';
+import { useQuery } from '@apollo/client';
 
-export default (WrappedComponent) => {
-  class RequireAuth extends Component {
-    componentWillUpdate(nextProps) {
-      if (!nextProps.data.loading && !nextProps.data.user) {
-        hashHistory.push('/login');
+const requireAuth =
+  (BaseComponent) =>
+  ({ history }) => {
+    const { data, loading } = useQuery(FETCH_USER);
+
+    useEffect(() => {
+      //if the user does not exist, push them to the homepage
+      if (!loading && !data?.user) {
+        history.push('/login');
       }
-    }
+    });
+    return <BaseComponent />;
+  };
 
-    render() {
-      return <WrappedComponent {...this.props} />;
-    }
-  }
-
-  return graphql(currentUserQuery)(RequireAuth);
-};
+export default compose(withRouter, requireAuth);

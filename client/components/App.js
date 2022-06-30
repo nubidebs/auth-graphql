@@ -1,13 +1,12 @@
+import 'core-js/stable';
 import React from 'react';
 import Header from './Header';
 
-const App = (props) => {
+export default (props) => {
   return (
-    <div className="container">
+    <div className='container'>
       <Header />
       {props.children}
     </div>
   );
 };
-
-export default App;

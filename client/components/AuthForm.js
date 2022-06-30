@@ -1,45 +1,44 @@
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 
-class AuthForm extends Component {
-  constructor(props) {
-    super(props);
+const AuthForm = ({ onSubmit, errors }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
 
-    this.state = { email: '', password: '' };
-  }
+  const onFormSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({ email, password });
+  };
 
-  onSubmit(event) {
-    event.preventDefault();
+  return (
+    <div className='row'>
+      <form onSubmit={onFormSubmit} className='col s4'>
+        <div className='input-field'>
+          <input
+            placeholder='Email'
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className='input-field'>
+          <input
+            placeholder='Password'
+            type='password'
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
 
-    this.props.onSubmit(this.state);
-  }
+        {errors &&
+          errors.map((err) => (
+            <div className='errors' key={err}>
+              {err}
+            </div>
+          ))}
 
-  render() {
-    return (
-      <div className="row">
-        <form onSubmit={this.onSubmit.bind(this)} className="col s6">
-          <div className="input-field">
-            <input
-              placeholder="Email"
-              value={this.state.email}
-              onChange={e => this.setState({ email: e.target.value })}
-            />
-          </div>
-          <div className="input-field">
-            <input
-              placeholder="Password"
-              type="password"
-              value={this.state.password}
-              onChange={e => this.setState({ password: e.target.value})}
-            />
-          </div>
-          <div className="errors">
-            {this.props.errors.map(error => <div key={error}>{error}</div>)}
-          </div>
-          <button className="btn">Submit</button>
-        </form>
-      </div>
-    );
-  }
-}
+        <button className='btn'>Submit</button>
+      </form>
+    </div>
+  );
+};
 
 export default AuthForm;
