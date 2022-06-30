@@ -1,0 +1,16 @@
+Full-stack application with authentication and GraphQL integration. Code along Stephen Grider's course "Learn and master GraphQL by building real web apps with React and Node"
+
+Note,I applied some changes to the original code which was outdated.
+
+#Tech 💻
+React
+Node
+Express
+Mongo / Mongoose
+Webpack
+Babel
+React Router
+GraphQL
+Apollo
+Axios
+Passport

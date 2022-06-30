@@ -1,24 +1,62 @@
 const webpack = require('webpack');
+const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
+const isDevelopment = true;
 module.exports = {
-  entry: './client/index.js',
+  mode: 'development',
+  entry: ['babel-polyfill', './client/index.js'],
   output: {
     path: '/',
-    filename: 'bundle.js'
+    filename: 'bundle.js',
   },
   module: {
     rules: [
       {
-        use: 'babel-loader',
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/env'],
+          },
+        },
         test: /\.js$/,
-        exclude: /node_modules/
-      }
-    ]
+        exclude: /node_modules/,
+      },
+      {
+        use: ['style-loader', 'css-loader', 'sass-loader'],
+        test: /\.s?css$/,
+      },
+      {
+        use: 'graphql-tag/loader',
+        test: /\.(graphql|gql)$/,
+        exclude: /node_modules/,
+      },
+      {
+        test: /\.jsx?$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader',
+        options: {},
+      },
+    ],
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: 'client/index.html'
-    })
-  ]
+      template: 'client/index.html',
+    }),
+    new MiniCssExtractPlugin({
+      filename: isDevelopment ? '[name].css' : '[name].[hash].css',
+      chunkFilename: isDevelopment ? '[id].css' : '[id].[hash].css',
+    }),
+  ],
+  resolve: {
+    extensions: ['.webpack.js', '.web.js', '.mjs', '.js', '.json'],
+    alias: {
+      Components: path.resolve(__dirname, 'client/components'),
+      Mutations: path.resolve(__dirname, 'client/mutations/'),
+      Queries: path.resolve(__dirname, 'client/queries/'),
+      Reducers: path.resolve(__dirname, 'client/reducers/'),
+      State: path.resolve(__dirname, 'client/state/'),
+    },
+  },
 };
